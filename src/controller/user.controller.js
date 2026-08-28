@@ -18,7 +18,7 @@ const generateAccessAndRefreshToken = async (userId) => {
     return { accessToken, refreshToken }
   } catch (error) {
     throw new ApiError(500, "Something went wrong while generating tokens")
-  }
+  }c
 }
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -63,7 +63,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({
     $or: [{ email }, { username }]
-  })
+  }).select("+password")
 
   if (!user) {
     throw new ApiError(400, "User doesn't exist, please register first")
@@ -117,8 +117,8 @@ const logoutUser = asyncHandler(async(req,res) => {
 
     return res
       .status(200)
-      .clearCookie(refreshToken,options)
-      .clearCookie(accessToken,options)
+      .clearCookie("refreshToken",options)
+      .clearCookie("accessToken",options)
       .json("User logout successfully")
 })
 

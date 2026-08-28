@@ -90,6 +90,4 @@ const trackIssue = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, issue, "Issue status fetched successfully"))
 })
 
-export { trackIssue }
-
 export { registerIssue, trackIssue }

@@ -42,7 +42,7 @@ const issueSchema = new Schema(
       default: "pending"
     },
     resolutionPhoto: {
-      type: String // cloudinary url, set when marked resolved
+      type: String // cloudinary url
     },
     resolvedAt: {
       type: Date
