@@ -1,54 +1,64 @@
-import { uploadOnCloudinary } from "../utils/cloudinary";
-import { ApiError } from "../utils/apiError";
-import { asyncHandler } from "../utils/async-handler";
+import { Issue } from "../models/issue.models.js"
+import { uploadOnCloudinary } from "../utils/cloudinary.js"
+import { ApiError } from "../utils/apiError.js"
+import { ApiResponse } from "../utils/apiResponse.js"
+import { asyncHandler } from "../utils/async-handler.js"
 
-const registerIssue = asyncHandler(async(req,res) => {
-    const refreshToken = req.cookies?.process.env.ACCESS_TOKEN_SECRET
+const registerIssue = asyncHandler(async (req, res) => {
+  // req.user should be set by a verifyJWT auth middleware on this route
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized access")
+  }
 
-    if(!refreshToken){
-      throw new ApiError(401, "Unauthorised access")
-    }
+  const { title, description, category, coordinates, address, ward } = req.body
 
-    const {title, description, category, location, coordinates, address } = req.body
+  if ([title, description, category].some((field) => !field || field.trim() === "")) {
+    throw new ApiError(400, "All fields are required")
+  }
 
-    if([title, description, category, coordinates].some((field) => !field || field.trim() === "")){
-      throw new ApiError(300, "All fields are required")
-    }
+  if (!Array.isArray(coordinates) || coordinates.length !== 2) {
+    throw new ApiError(400, "Valid coordinates [longitude, latitude] are required")
+  }
 
-    const photoOfIssueLocalPath = req.files?.photoOfIssue?.[0]?.path;
+  if (!ward) {
+    throw new ApiError(400, "Ward is required")
+  }
 
-    if(!photoOfIssueLocalPath){
-      throw new ApiError(400, "Photo is required")
-    }
+  const photoOfIssueLocalPath = req.files?.photoOfIssue?.[0]?.path
 
-    const photoOfIssue = await uploadOnCloudinary(photoOfIssueLocalPath);
+  if (!photoOfIssueLocalPath) {
+    throw new ApiError(400, "Photo is required")
+  }
 
-    const issue = await Issue.create({
-      title,
-      description,
-      category,
-      location,
+  const photoOfIssue = await uploadOnCloudinary(photoOfIssueLocalPath)
+
+  if (!photoOfIssue?.url) {
+    throw new ApiError(500, "Error occurred while uploading photo")
+  }
+
+  const issue = await Issue.create({
+    title,
+    description,
+    category,
+    location: {
+      type: "Point",
       coordinates,
-      address,
-      photoOfIssue: photoOfIssue.url
-    })
+      address
+    },
+    photoOfIssue: photoOfIssue.url,
+    ward,
+    reportedBy: req.user._id
+  })
 
-    const createdIssue = await Issue.findById(issue._id).select(
-    "-refreshToken")
+  const createdIssue = await Issue.findById(issue._id)
 
-    if(!createdIssue){
-      throw new ApiError(400, "Error occurred during creating an issue")
-    }
+  if (!createdIssue) {
+    throw new ApiError(500, "Error occurred while creating issue")
+  }
 
-    const options = {
-      httpOnly: true,
-      secure: true
-    }
-
-    return res
-      .status(200)
-      .cookie(refreshToken, options)
-      .json("Issue registerd successfully")
+  return res
+    .status(201)
+    .json(new ApiResponse(201, createdIssue, "Issue registered successfully"))
 })
 
-export {registerIssue}
+export { registerIssue }
