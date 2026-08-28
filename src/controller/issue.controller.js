@@ -3,9 +3,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiError } from "../utils/apiError.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import { asyncHandler } from "../utils/async-handler.js"
+import mongoose from "mongoose"
 
 const registerIssue = asyncHandler(async (req, res) => {
-  // req.user should be set by a verifyJWT auth middleware on this route
   if (!req.user?._id) {
     throw new ApiError(401, "Unauthorized access")
   }
@@ -61,4 +61,35 @@ const registerIssue = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, createdIssue, "Issue registered successfully"))
 })
 
-export { registerIssue }
+const trackIssue = asyncHandler(async (req, res) => {
+  if (!req.user?._id) {
+    throw new ApiError(401, "Unauthorized access")
+  }
+
+  const { issueId } = req.params
+
+  if (!mongoose.Types.ObjectId.isValid(issueId)) {
+    throw new ApiError(400, "Invalid issue id")
+  }
+
+  const issue = await Issue.findById(issueId)
+    .populate("assignedTo", "fullname email")
+    .populate("ward", "name")
+
+  if (!issue) {
+    throw new ApiError(404, "No registered issue found")
+  }
+
+  // only the user who filed it can track it
+  if (issue.reportedBy.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, "You are not authorized to track this issue")
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issue, "Issue status fetched successfully"))
+})
+
+export { trackIssue }
+
+export { registerIssue, trackIssue }
