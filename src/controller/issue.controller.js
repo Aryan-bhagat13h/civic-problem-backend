@@ -93,13 +93,28 @@ const trackIssue = asyncHandler(async (req, res) => {
 
 const updateStatus = asyncHandler(async(req,res) => {
 
-  const user = await User.findOne(req.params?._id)
+  const issue = await Issue.findById(req.params._id)
 
-  if(!user){
-    throw new ApiError(404, "User does not exist")
+  if(!issue){
+    throw new ApiError(404, "Issue not found")
   }
 
+  const {status} = req.body.status
+  if(!status){
+    throw new ApiError(400, "Status is required")
+  }
+
+  const allowedStatus = Issue.schema.path('status').enumValues
+
+  if(!allowedStatus.include(status)){
+    throw new ApiError(400, "Invalid status")
+  }
+
+  issue.status = status;
+  await issue.save();
+
+  return res.status(200)
 
 })
 
-export { registerIssue, trackIssue }
+export { registerIssue, trackIssue, updateStatus }
