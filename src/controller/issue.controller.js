@@ -3,6 +3,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiError } from "../utils/apiError.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import { asyncHandler } from "../utils/async-handler.js"
+import {User} from "../models/user.models.js"
 import mongoose from "mongoose"
 
 const registerIssue = asyncHandler(async (req, res) => {
@@ -88,6 +89,17 @@ const trackIssue = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, issue, "Issue status fetched successfully"))
+})
+
+const updateStatus = asyncHandler(async(req,res) => {
+
+  const user = await User.findOne(req.params?._id)
+
+  if(!user){
+    throw new ApiError(404, "User does not exist")
+  }
+
+
 })
 
 export { registerIssue, trackIssue }
