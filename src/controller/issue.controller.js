@@ -117,4 +117,18 @@ const updateStatus = asyncHandler(async(req,res) => {
 
 })
 
+const deleteIssue = asyncHandler(async(req,res) => {
+  const issue = await Issue.findById(req.params._id)
+  if(!issue){
+    throw new ApiError(404, "Issue not foung")
+  }
+
+  issue.isDeleted = true
+  issue.deletedAt = new Date();
+  issue.deletedBy = req.user._id,
+  issue.deleteReason = req.body.reason || 'Not specified'
+
+  await issue.save()
+})
+
 export { registerIssue, trackIssue, updateStatus }
