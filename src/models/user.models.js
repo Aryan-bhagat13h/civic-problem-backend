@@ -44,7 +44,11 @@ const userSchema = new Schema(
       enum: ["citizen", "ward-officer"],
       required: true,
       default: "citizen"
-    }
+    },
+    refreshToken: {
+    type: String,
+    required: true
+  }
   },
   { timestamps: true }
 );

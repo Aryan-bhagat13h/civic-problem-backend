@@ -4,6 +4,7 @@ import { ApiError } from "../utils/apiError.js"
 import { ApiResponse } from "../utils/apiResponse.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import {User} from "../models/user.models.js"
+import {Ward} from "../models/ward.models.js"
 import mongoose from "mongoose"
 
 const registerIssue = asyncHandler(async (req, res) => {
@@ -11,7 +12,7 @@ const registerIssue = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized access")
   }
 
-  const { title, description, category, coordinates, address, ward } = req.body
+  const { title, description, category, coordinates, address } = req.body
 
   if ([title, description, category].some((field) => !field || field.trim() === "")) {
     throw new ApiError(400, "All fields are required")
@@ -20,6 +21,15 @@ const registerIssue = asyncHandler(async (req, res) => {
   if (!Array.isArray(coordinates) || coordinates.length !== 2) {
     throw new ApiError(400, "Valid coordinates [longitude, latitude] are required")
   }
+
+  const ward = await Ward.findOne({
+     boundary: {
+       $geoIntersects: {
+         $geometry: { type: "Point", coordinates } // [lng, lat]
+       }
+     }
+   })
+   if (!ward) throw new ApiError(400, "Location falls outside any known ward")
 
   if (!ward) {
     throw new ApiError(400, "Ward is required")
@@ -37,6 +47,8 @@ const registerIssue = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error occurred while uploading photo")
   }
 
+  const officer = await User.findOne({ role: "ward-officer", ward: ward._id })
+
   const issue = await Issue.create({
     title,
     description,
@@ -47,8 +59,9 @@ const registerIssue = asyncHandler(async (req, res) => {
       address
     },
     photoOfIssue: photoOfIssue.url,
-    ward,
-    reportedBy: req.user._id
+    ward : ward_id,
+    reportedBy: req.user._id,
+    assignedTo: officer?._id
   })
 
   const createdIssue = await Issue.findById(issue._id)
@@ -84,7 +97,8 @@ const trackIssue = asyncHandler(async (req, res) => {
 
 const updateStatus = asyncHandler(async(req,res) => {
 
-  const issue = await Issue.findById(req.params._id)
+  const { issueId } = req.params
+  const issue = await Issue.findById(issueId)
 
   if(!issue){
     throw new ApiError(404, "Issue not found")
@@ -104,7 +118,9 @@ const updateStatus = asyncHandler(async(req,res) => {
   issue.status = status;
   await issue.save();
 
-  return res.status(200)
+  return res
+  .status(200)
+  .json(new ApiResponse(issue, "Issue status successful"))
 
 })
 
@@ -120,6 +136,10 @@ const deleteIssue = asyncHandler(async(req,res) => {
   issue.deleteReason = req.body.reason || 'Not specified'
 
   await issue.save()
+
+  return res
+    .status(200)
+    .json(new ApiResponse(deleteIssue, "Issue deleted successfully"))
 })
 
 //ward-officers only
@@ -133,7 +153,6 @@ const getAllIssues = asyncHandler(async(req,res) => {
     .skip(skip)
     .limit(limit)
     .sort({createdAt: -1})
-    .populate("status", "status")
     .populate("ward", "name")
     .populate("reportedBy", "fullname email")
     .populate("assignedTo", "fullname email")
@@ -150,19 +169,15 @@ const getAllIssues = asyncHandler(async(req,res) => {
 const getWardIssues = asyncHandler(async(req,res) => {
   const issue = await Issue.find({isDeleted: false, ward: req.user.ward})
     .limit(10)
-    .sort({CreatedAt: -1})
+    .sort({createdAt: -1})
     .populate("ward", "name")
     .populate("reportedBy", "fullname email")
     .populate("assignedTo", "fullname email")
-    .populate("status", "status")
 
-  if(!issue){
-  throw new ApiError(404, "no issues found")
 
   return res
     .status(200)
     .json(new ApiResponse(200, issue, "ward issues fetched successfully"))
-  }
 })
 
 const assignOfficer = asyncHandler(async(req,res) => {

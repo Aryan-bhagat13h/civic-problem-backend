@@ -21,5 +21,6 @@ const wardSchema = new Schema({
 },{timestamps: true})
 
 wardSchema.index({location : "2dsphere"})
+wardSchema.index({ boundary: "2dsphere" })
 
 export const Ward = mongoose.model("Ward", wardSchema)
