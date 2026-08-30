@@ -95,6 +95,23 @@ const trackIssue = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, issue, "Issue status fetched successfully"))
 })
 
+const getMyIssues = asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page) || 1
+  const limit = parseInt(req.query.limit) || 10
+  const skip = (page - 1) * limit
+
+  const issues = await Issue.find({ isDeleted: false, reportedBy: req.user._id })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 })
+    .populate("ward", "name")
+    .populate("assignedTo", "fullname email")
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issues, "Your issues fetched successfully"))
+})
+
 const updateStatus = asyncHandler(async(req,res) => {
 
   const { issueId } = req.params
@@ -205,4 +222,4 @@ const assignOfficer = asyncHandler(async(req,res) => {
     .json(new ApiResponse(200, officer, "Officer assigned successfully"))
 })
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer }
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues }
