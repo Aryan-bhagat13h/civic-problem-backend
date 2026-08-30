@@ -124,8 +124,14 @@ const deleteIssue = asyncHandler(async(req,res) => {
 
 //ward-officers only
 const getAllIssues = asyncHandler(async(req,res) => {
+
+  const page = parseInt(req.query.page) || 1
+  const limit = parseInt(req.query.limit) || 10
+  const skip = (page - 1) * limit
+
   const issue = await Issue.find({isDeleted : false})
-    .limit(10)
+    .skip(skip)
+    .limit(limit)
     .sort({createdAt: -1})
     .populate("status", "status")
     .populate("ward", "name")
@@ -150,12 +156,13 @@ const getWardIssues = asyncHandler(async(req,res) => {
     .populate("assignedTo", "fullname email")
     .populate("status", "status")
 
-    if(!issue){
-    throw new ApiError(404, "no issues found")
+  if(!issue){
+  throw new ApiError(404, "no issues found")
 
   return res
     .status(200)
-    .json(new ApiResponse(200, issue, "All issues fetched successfully"))
+    .json(new ApiResponse(200, issue, "ward issues fetched successfully"))
   }
 }) 
+
 export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues }
