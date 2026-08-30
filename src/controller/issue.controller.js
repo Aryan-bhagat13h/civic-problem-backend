@@ -139,8 +139,23 @@ const getAllIssues = asyncHandler(async(req,res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, issue, "All issues fetched successfully"))
-
 })
 
+const getWardIssues = asyncHandler(async(req,res) => {
+  const issue = await Issue.find({isDeleted: false, ward: req.user.ward})
+    .limit(10)
+    .sort({CreatedAt: -1})
+    .populate("ward", "name")
+    .populate("reportedBy", "fullname email")
+    .populate("assignedTo", "fullname email")
+    .populate("status", "status")
 
+    if(!issue){
+    throw new ApiError(404, "no issues found")
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issue, "All issues fetched successfully"))
+  }
+}) 
 export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues }
