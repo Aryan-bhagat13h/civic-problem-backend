@@ -41,6 +41,21 @@ const issueSchema = new Schema(
       enum: ["pending", "in-progress", "resolved", "rejected"],
       default: "pending"
     },
+    isDeleted: {
+      type: Boolean,
+      default: false
+    },
+    deletedAt: {
+      type: Date
+    },
+    deletedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    },
+    deleteReason: {
+      type: String,
+      trim: true
+    },
     resolutionPhoto: {
       type: String // cloudinary url
     },

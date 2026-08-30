@@ -63,10 +63,6 @@ const registerIssue = asyncHandler(async (req, res) => {
 })
 
 const trackIssue = asyncHandler(async (req, res) => {
-  if (!req.user?._id) {
-    throw new ApiError(401, "Unauthorized access")
-  }
-
   const { issueId } = req.params
 
   if (!mongoose.Types.ObjectId.isValid(issueId)) {
@@ -79,11 +75,6 @@ const trackIssue = asyncHandler(async (req, res) => {
 
   if (!issue) {
     throw new ApiError(404, "No registered issue found")
-  }
-
-  // only the user who filed it can track it
-  if (issue.reportedBy.toString() !== req.user._id.toString()) {
-    throw new ApiError(403, "You are not authorized to track this issue")
   }
 
   return res
@@ -99,14 +90,14 @@ const updateStatus = asyncHandler(async(req,res) => {
     throw new ApiError(404, "Issue not found")
   }
 
-  const {status} = req.body.status
+  const {status} = req.body
   if(!status){
     throw new ApiError(400, "Status is required")
   }
 
   const allowedStatus = Issue.schema.path('status').enumValues
 
-  if(!allowedStatus.include(status)){
+  if(!allowedStatus.includes(status)){
     throw new ApiError(400, "Invalid status")
   }
 
@@ -131,4 +122,25 @@ const deleteIssue = asyncHandler(async(req,res) => {
   await issue.save()
 })
 
-export { registerIssue, trackIssue, updateStatus }
+//ward-officers only
+const getAllIssues = asyncHandler(async(req,res) => {
+  const issue = await Issue.find({isDeleted : false})
+    .limit(10)
+    .sort({createdAt: -1})
+    .populate("status", "status")
+    .populate("ward", "name")
+    .populate("reportedBy", "fullname email")
+    .populate("assignedTo", "fullname email")
+
+  if(!issue){
+    throw new ApiError(404, "no issues found")
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issue, "All issues fetched successfully"))
+
+})
+
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues }
