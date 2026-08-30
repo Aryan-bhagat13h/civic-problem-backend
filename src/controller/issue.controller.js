@@ -163,6 +163,31 @@ const getWardIssues = asyncHandler(async(req,res) => {
     .status(200)
     .json(new ApiResponse(200, issue, "ward issues fetched successfully"))
   }
-}) 
+})
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues }
+const assignOfficer = asyncHandler(async(req,res) => {
+  const {issueId} = req.params
+
+  const issue = await Issue.findById(issueId)
+
+  if(!issue){
+    throw new ApiError(404, "issue not found")
+  }
+
+  const {officerId} = req.body
+
+  const officer = await User.findOne({_id: officerId, role: "ward-officer"})
+
+  if (!officer) {
+    throw new ApiError(404, "Ward officer not found")
+  }
+
+  issue.assignedTo = officer
+  await issue.save()
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, officer, "Officer assigned successfully"))
+})
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer }
