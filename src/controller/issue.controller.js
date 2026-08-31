@@ -1,7 +1,7 @@
 import { Issue } from "../models/issue.models.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiError } from "../utils/apiError.js"
-import { ApiRepsonse} from "../utils/apiResponse.js"
+import { ApiResponse} from "../utils/apiResponse.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import {User} from "../models/user.models.js"
 import {Ward} from "../models/ward.models.js"
@@ -12,24 +12,32 @@ const registerIssue = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Unauthorized access")
   }
 
-  const { title, description, category, coordinates, address } = req.body
+  const { title, description, category, address } = req.body
 
   if ([title, description, category].some((field) => !field || field.trim() === "")) {
     throw new ApiError(400, "All fields are required")
   }
+
+  let { coordinates } = req.body
+    if (typeof coordinates === "string") {
+    try { coordinates = JSON.parse(coordinates) } catch { coordinates = null }
+}
 
   if (!Array.isArray(coordinates) || coordinates.length !== 2) {
     throw new ApiError(400, "Valid coordinates [longitude, latitude] are required")
   }
 
   const ward = await Ward.findOne({
-     boundary: {
-       $geoIntersects: {
-         $geometry: { type: "Point", coordinates } // [lng, lat]
-       }
-     }
-   })
-   if (!ward) throw new ApiError(400, "Location falls outside any known ward")
+    location: {
+      $geoIntersects: {
+        $geometry: { type: "Point", coordinates: coordinates }
+      }
+    }
+  })
+
+if (!ward) {
+  throw new ApiError(400, "Location falls outside any known ward")
+}
 
   if (!ward) {
     throw new ApiError(400, "Ward is required")
@@ -59,7 +67,7 @@ const registerIssue = asyncHandler(async (req, res) => {
       address
     },
     photoOfIssue: photoOfIssue.url,
-    ward : ward_id,
+    ward : ward._id,
     reportedBy: req.user._id,
     assignedTo: officer?._id
   })
@@ -137,12 +145,12 @@ const updateStatus = asyncHandler(async(req,res) => {
 
   return res
   .status(200)
-  .json(new ApiResponse(issue, "Issue status successful"))
+  .json(new ApiResponse(200, issue, "Issue status successful"))
 
 })
 
 const deleteIssue = asyncHandler(async(req,res) => {
-  const issue = await Issue.findById(req.params._id)
+  const issue = await Issue.findById(req.params.issueId)
   if(!issue){
     throw new ApiError(404, "Issue not found")
   }
@@ -156,7 +164,7 @@ const deleteIssue = asyncHandler(async(req,res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(deleteIssue, "Issue deleted successfully"))
+    .json(new ApiResponse(200, issue, "Issue deleted successfully"))
 })
 
 //ward-officers only
@@ -254,7 +262,7 @@ const resolvedIssue = asyncHandler(async(req,res) => {
 
   return res
     .status(200)
-    .json(new ApiRepsonse(200, issue, "Issue updated successfully"))
+    .json(new ApiResponse(200, issue, "Issue updated successfully"))
 })
 
 export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue }

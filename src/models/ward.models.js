@@ -1,26 +1,29 @@
-import mongoose, {Schema} from 'mongoose'
+import mongoose, { Schema } from 'mongoose'
 
-const wardSchema = new Schema({
+const wardSchema = new Schema(
+  {
     name: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      trim: true
     },
     location: {
-      type: { 
-      type: String,
-      enum: ["Polygon"],
-      required: true,
-      default: "Polygon"
+      type: {
+        type: String,
+        enum: ["Polygon"],
+        required: true,
+        default: "Polygon"
       },
-      coordiantes : {
-        type:[[[Number]]],
+      coordinates: {
+        type: [[[Number]]], // [ [ [lng, lat], [lng, lat], ... ] ]
         required: true
       }
     }
-},{timestamps: true})
+  },
+  { timestamps: true }
+)
 
-wardSchema.index({location : "2dsphere"})
-wardSchema.index({ boundary: "2dsphere" })
+wardSchema.index({ location: "2dsphere" })
 
 export const Ward = mongoose.model("Ward", wardSchema)

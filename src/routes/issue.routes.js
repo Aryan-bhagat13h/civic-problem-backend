@@ -22,8 +22,8 @@ router.route("/register").post(
   upload.fields([{ name: "photoOfIssue", maxCount: 1 }]),
   registerIssue
 )
-router.route("/:issueId").get(restrictedToCitizen, trackIssue)
 router.route("/mine").get(restrictedToCitizen, getMyIssues)
+router.route("/:issueId").get(restrictedToCitizen, trackIssue)
 router.route("/:issueId").delete(restrictedToCitizen, deleteIssue)
 
 router.route("/").get(restrictedToOfficer, getAllIssues)
