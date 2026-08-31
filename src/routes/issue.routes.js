@@ -1,7 +1,7 @@
 import { Router } from "express"
-import { verifyJwt } from "../middlewares/auth.middleware.js"
-import { restrictedToCitizen, restrictedToOfficer } from "../middlewares/role.middleware.js"
-import { upload } from "../middlewares/multer.middleware.js"
+import { verifyJwt } from "../middlwears/auth.middlerware.js"
+import { restrictedToCitizen, restrictedToOfficer } from "../middlwears/role.middleware.js"
+import { upload } from "../middlwears/multer.middleware.js"
 import {
   registerIssue,
   trackIssue,

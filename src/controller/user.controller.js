@@ -1,6 +1,6 @@
-import asyncHandler from '../utils/async-handler.js'
-import ApiError from '../utils/apiError.js'
-import ApiResponse from '../utils/apiResponse.js'
+import {asyncHandler} from '../utils/async-handler.js'
+import {ApiError} from '../utils/apiError.js'
+import { ApiRepsonse } from '../utils/apiResponse.js'
 import { User } from '../models/user.models.js'
 
 const generateAccessAndRefreshToken = async (userId) => {
@@ -119,7 +119,7 @@ const logoutUser = asyncHandler(async(req,res) => {
       .status(200)
       .clearCookie("refreshToken",options)
       .clearCookie("accessToken",options)
-      .json("User logout successfully")
+      .json(ApiRepsonse(200, "User logout successfully"))
 })
 
 export { registerUser, loginUser,logoutUser }

@@ -14,7 +14,7 @@ const wardSchema = new Schema({
       default: "Polygon"
       },
       coordiantes : {
-        type:[[[number]]],
+        type:[[[Number]]],
         required: true
       }
     }

@@ -1,7 +1,7 @@
 import { Issue } from "../models/issue.models.js"
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiError } from "../utils/apiError.js"
-import { ApiResponse } from "../utils/apiResponse.js"
+import { ApiRepsonse} from "../utils/apiResponse.js"
 import { asyncHandler } from "../utils/async-handler.js"
 import {User} from "../models/user.models.js"
 import {Ward} from "../models/ward.models.js"
@@ -144,7 +144,7 @@ const updateStatus = asyncHandler(async(req,res) => {
 const deleteIssue = asyncHandler(async(req,res) => {
   const issue = await Issue.findById(req.params._id)
   if(!issue){
-    throw new ApiError(404, "Issue not foung")
+    throw new ApiError(404, "Issue not found")
   }
 
   issue.isDeleted = true
@@ -222,4 +222,39 @@ const assignOfficer = asyncHandler(async(req,res) => {
     .json(new ApiResponse(200, officer, "Officer assigned successfully"))
 })
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues }
+const resolvedIssue = asyncHandler(async(req,res) => {
+  const {resolvedAt} = req.body
+  const resolutionPhotoLocalPath = req.files?.resolutionPhoto?.[0].path
+
+  if(!resolutionPhotoLocalPath){
+    throw new ApiError(400, "Photo is required")
+  }
+
+  const resolutionPhoto = uploadOnCloudinary(resolutionPhotoLocalPath)
+  if(!resolutionPhoto){
+    throw new ApiError(400, "Error occured while uploading the photo")
+  }
+
+  const issue = await Issue.findByIdAndUpdate(
+    req.params?._id,
+    {
+      $set: {
+        resolvedAt,
+        resolutionPhoto: resolutionPhoto.url
+      }
+    },
+    {
+      new:true
+    }
+  )
+
+  if(!issue){
+    throw new ApiError(404, "Issue not found")
+  }
+
+  return res
+    .status(200)
+    .json(new ApiRepsonse(200, issue, "Issue updated successfully"))
+})
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue }
