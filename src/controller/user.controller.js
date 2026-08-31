@@ -50,7 +50,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   return res.status(201).json(
-    new ApiResponse(201, createdUser, "User registered successfully")
+    new ApiRepsonse(201, createdUser, "User registered successfully")
   )
 })
 
@@ -89,7 +89,7 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
     .json(
-      new ApiResponse(
+      new ApiRepsonse(
         200,
         { user: loggedInUser, accessToken, refreshToken },
         "User logged in successfully"
@@ -119,7 +119,7 @@ const logoutUser = asyncHandler(async(req,res) => {
       .status(200)
       .clearCookie("refreshToken",options)
       .clearCookie("accessToken",options)
-      .json(ApiRepsonse(200, "User logout successfully"))
+      .json(new ApiRepsonse(200, "User logout successfully"))
 })
 
 export { registerUser, loginUser,logoutUser }

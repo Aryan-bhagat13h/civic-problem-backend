@@ -19,7 +19,6 @@ const userSchema = new Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email address"]
     },
     fullname: {
       type: String,
@@ -28,9 +27,7 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: [true, "Password is required"],
-      minlength: [8, "Password must be at least 8 characters"],
-      select: false
+      required: [true, "Password is required"]
     },
     ward: {
       type: Schema.Types.ObjectId,
@@ -47,16 +44,14 @@ const userSchema = new Schema(
     },
     refreshToken: {
     type: String,
-    required: true
   }
   },
   { timestamps: true }
 );
 
-userSchema.pre("save",  async function(next) {
+userSchema.pre("save",  async function() {
   if(!this.isModified("password"))return;
    this.password = await bcrypt.hash(this.password, 10)
-   next()
 })
 
 userSchema.methods.isPasswordCorrect = async function(password){
