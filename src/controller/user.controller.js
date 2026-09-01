@@ -2,6 +2,8 @@ import {asyncHandler} from '../utils/async-handler.js'
 import {ApiError} from '../utils/apiError.js'
 import { ApiResponse } from '../utils/apiResponse.js'
 import { User } from '../models/user.models.js'
+import { Ward } from '../models/ward.models.js' 
+import mongoose from 'mongoose'
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -22,11 +24,30 @@ const generateAccessAndRefreshToken = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-  const { fullname, email, password, username } = req.body
+  const { fullname, email, password, username, role, ward } = req.body
 
   if ([fullname, email, password, username].some((field) => !field || field.trim() === "")) {
     throw new ApiError(400, "All fields are required")
   }
+
+  const userRole = role || "citizen"
+
+  let wardId = undefined
+
+  if (!["citizen", "ward-officer"].includes(userRole)) {
+    throw new ApiError(400, "Invalid role")
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(ward)) {
+      throw new ApiError(400, "Invalid ward id")
+    }
+
+  const wardExists = await Ward.findById(ward)
+    if (!wardExists) {
+      throw new ApiError(404, "Ward not found")
+    }
+
+  wardId = wardExists._id
 
   const existedUser = await User.findOne({
     $or: [{ email }, { username }]
@@ -40,7 +61,9 @@ const registerUser = asyncHandler(async (req, res) => {
     fullname,
     email,
     password,
-    username: username.toLowerCase()
+    username: username.toLowerCase(),
+    role: userRole,
+    ward: wardId
   })
 
   const createdUser = await User.findById(user._id).select("-password -refreshToken")

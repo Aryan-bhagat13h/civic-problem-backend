@@ -150,7 +150,8 @@ const updateStatus = asyncHandler(async(req,res) => {
 })
 
 const deleteIssue = asyncHandler(async(req,res) => {
-  const issue = await Issue.findById(req.params.issueId)
+  const {issueId} = req.params
+  const issue = await Issue.findById(issueId)
   if(!issue){
     throw new ApiError(404, "Issue not found")
   }
@@ -158,7 +159,7 @@ const deleteIssue = asyncHandler(async(req,res) => {
   issue.isDeleted = true
   issue.deletedAt = new Date();
   issue.deletedBy = req.user._id,
-  issue.deleteReason = req.body.reason || 'Not specified'
+  issue.deleteReason = req.params.reason || 'Not specified'
 
   await issue.save()
 
