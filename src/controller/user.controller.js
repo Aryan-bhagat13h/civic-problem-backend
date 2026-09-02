@@ -172,4 +172,44 @@ const changePassword = asyncHandler(async (req, res) => {
   );
 });
 
-export { registerUser, loginUser,logoutUser, changePassword }
+const updateProfile = asyncHandler(async (req,res) => {
+  const {fullname, email, username} = req.body
+
+  if(!fullname && !email && !username){
+    throw new ApiError(400, "At least one field is required to update profile")
+  }
+
+  let updatedFields = {}
+
+  if(fullname !== undefined){
+    updatedFields.fullname = fullname
+  }
+  if(email !== undefined){
+    updatedFields.email = email
+  }
+  
+  if(username !== undefined){
+    updatedFields.usernmae = username.toLowerCase()
+  }
+
+  const userId = req.user?._id
+  const user = await User.findByIdAndUpdate(
+    userId,
+      {
+        $set: updatedFields
+      },
+      {
+        new: true
+      }
+    ).select("-password -refreshToken")
+
+  if(!user){
+    throw new ApiError(404, "User not found")
+  }
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, user, "profile updated successfully"))
+});
+
+export { registerUser, loginUser,logoutUser, changePassword, updateProfile }
