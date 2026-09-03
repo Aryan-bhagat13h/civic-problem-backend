@@ -59,6 +59,22 @@ const issueSchema = new Schema(
     resolutionPhoto: {
       type: String // cloudinary url
     },
+    isRejected: {
+      type: Boolean,
+      default: false
+    },
+    rejectedAt:{
+      type: Date
+    },
+    rejectedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "user"
+    },
+    rejectionReason: {
+      type: String,
+      required: true,
+      trim: true
+    },
     resolvedAt: {
       type: Date
     },

@@ -266,4 +266,35 @@ const resolvedIssue = asyncHandler(async(req,res) => {
     .json(new ApiResponse(200, issue, "Issue updated successfully"))
 })
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue }
+const rejectIssue = asyncHandler(async (req, res) => {
+  const { issueId } = req.params
+  const { rejectionReason } = req.body
+
+  if (!rejectionReason || rejectionReason.trim() === "") {
+    throw new ApiError(400, "Rejection reason is required")
+  }
+
+  const issue = await Issue.findByIdAndUpdate(
+    issueId,
+    {
+      $set: {
+        status: "rejected",
+        rejectedAt: new Date(),
+        rejectedBy: req.user._id,
+        rejectionReason: rejectionReason.trim(),
+        isRejected: true
+      }
+    },
+    { new: true }
+  )
+
+  if (!issue) {
+    throw new ApiError(404, "Issue not found")
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issue, "Issue rejected successfully"))
+})
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, rejectIssue }
