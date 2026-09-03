@@ -297,4 +297,33 @@ const rejectIssue = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, issue, "Issue rejected successfully"))
 })
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, rejectIssue }
+const commentOnIssue = asyncHandler(async(req,res) => {
+  const {issueId} = req.params
+  const {comment} = req.body
+
+  if(!comment || comment.trim() === ""){
+    throw new ApiError(400, "Comment is required")
+  }
+
+  const issue = await Issue.findById(issueId)
+
+  if(!issue){
+    throw new ApiError(404, "Issue not found")
+  }
+
+  const newComment = await Comment.create({
+      comment: comment.trim(),
+      issue: issue?._id,
+      user: req.user?._id 
+  })
+
+  if(!newComment){
+    throw new ApiError(400, "Error occured while creating comment")
+  }
+
+  return res
+    .status(200)
+    .json(200, comment, "Comment created successfully")
+})
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, commentOnIssue }

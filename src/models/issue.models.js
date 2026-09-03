@@ -68,7 +68,7 @@ const issueSchema = new Schema(
     },
     rejectedBy: {
       type: Schema.Types.ObjectId,
-      ref: "user"
+      ref: "User"
     },
     rejectionReason: {
       type: String,
