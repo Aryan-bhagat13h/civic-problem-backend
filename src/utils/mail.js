@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import {ApiError} from '../utils/apiError.js'
-import e from 'express';
+import {ApiResponse} from '../utils/apiResponse.js'
 
 
 const transporter = nodemailer.createTransport({
@@ -67,4 +67,4 @@ const sendIssueResolved = async(to, issue) => {
   })
 }
 
-export {sendIssueResolved, sendOtpMail}
+export {sendIssueResolved, sendOtpMail,sendMail}
