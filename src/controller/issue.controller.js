@@ -262,7 +262,8 @@ const resolvedIssue = asyncHandler(async(req,res) => {
     {
       $set: {
         resolvedAt,
-        resolutionPhoto: resolutionPhoto.url
+        resolutionPhoto: resolutionPhoto.url,
+        isResolved: true
       }
     },
     {
@@ -339,4 +340,30 @@ const commentOnIssue = asyncHandler(async(req,res) => {
     .json(200, comment, "Comment created successfully")
 })
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, commentOnIssue }
+const reopenIssue = asyncHandler(async (req, res) => {
+  const { issueId } = req.params
+  const issue = await Issue.findById(issueId)
+
+  if (!issue) {
+    throw new ApiError(404, "Issue not found")
+  }
+
+  if (!issue.reportedBy.equals(req.user._id)) {
+    throw new ApiError(403, "You can only reopen your own issues")
+  }
+
+  if (issue.status !== "resolved") {
+    throw new ApiError(400, "Only resolved issues can be reopened")
+  }
+
+  issue.status = "pending"
+  issue.reopenedAt = new Date()
+
+  await issue.save()
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, issue, "Issue reopened successfully"))
+})
+
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, commentOnIssue, rejectIssue, reopenIssue }

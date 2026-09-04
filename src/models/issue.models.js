@@ -78,6 +78,13 @@ const issueSchema = new Schema(
     resolvedAt: {
       type: Date
     },
+    isResolved: {
+      type: Boolean,
+      default: false
+    },
+    reopenedAt: {
+      type: Date
+    },
     ward: {
       type: Schema.Types.ObjectId,
       ref: "Ward",
