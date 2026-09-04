@@ -38,7 +38,7 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["citizen", "ward-officer"],
+      enum: ["citizen", "ward-officer", "admin"],
       required: true,
       default: "citizen"
     },

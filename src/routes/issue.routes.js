@@ -1,6 +1,7 @@
 import { Router } from "express"
 import { verifyJwt } from "../middlwears/auth.middlerware.js"
 import { restrictedToCitizen, restrictedToOfficer } from "../middlwears/role.middleware.js"
+import { restrictedToAdmin } from "../middlwears/role.middleware.js"
 import { upload } from "../middlwears/multer.middleware.js"
 import {
   registerIssue,
@@ -29,6 +30,6 @@ router.route("/:issueId").delete(restrictedToCitizen, deleteIssue)
 router.route("/").get(restrictedToOfficer, getAllIssues)
 router.route("/ward/mine").get(restrictedToOfficer, getWardIssues)
 router.route("/:issueId/status").patch(restrictedToOfficer, updateStatus)
-router.route("/:issueId/assign").patch(restrictedToOfficer, assignOfficer)
+router.route("/:issueId/assign").patch(restrictedToAdmin, assignOfficer)
 
 export default router
