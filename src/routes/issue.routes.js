@@ -11,7 +11,11 @@ import {
   deleteIssue,
   getAllIssues,
   getWardIssues,
-  assignOfficer
+  assignOfficer,
+  resolvedIssue,
+  rejectIssue,
+  commentOnIssue,
+  reopenIssue
 } from "../controller/issue.controller.js"
 
 const router = Router()
@@ -26,10 +30,18 @@ router.route("/register").post(
 router.route("/mine").get(restrictedToCitizen, getMyIssues)
 router.route("/:issueId").get(restrictedToCitizen, trackIssue)
 router.route("/:issueId").delete(restrictedToCitizen, deleteIssue)
+router.route("/:issueId/reopen").patch(restrictedToCitizen, reopenIssue)
+router.route("/:issueId/comment").post(commentOnIssue)
 
 router.route("/").get(restrictedToOfficer, getAllIssues)
 router.route("/ward/mine").get(restrictedToOfficer, getWardIssues)
 router.route("/:issueId/status").patch(restrictedToOfficer, updateStatus)
+router.route("/:issueId/resolve").patch(
+  restrictedToOfficer,
+  upload.fields([{ name: "resolutionPhoto", maxCount: 1 }]),
+  resolvedIssue
+)
+router.route("/:issueId/reject").patch(restrictedToOfficer, rejectIssue)
 router.route("/:issueId/assign").patch(restrictedToAdmin, assignOfficer)
 
 export default router

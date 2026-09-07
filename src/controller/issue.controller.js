@@ -368,4 +368,4 @@ const reopenIssue = asyncHandler(async (req, res) => {
 
 
 
-export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, commentOnIssue, rejectIssue, reopenIssue, getIssueStats }
+export { registerIssue, trackIssue, updateStatus, deleteIssue, getAllIssues, getWardIssues, assignOfficer, getMyIssues,resolvedIssue, commentOnIssue, rejectIssue, reopenIssue }
