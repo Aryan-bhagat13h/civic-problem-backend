@@ -1,7 +1,6 @@
 import { Router } from "express"
 import { verifyJwt } from "../middlwears/auth.middlerware.js"
-import { restrictedToCitizen, restrictedToOfficer } from "../middlwears/role.middleware.js"
-import { restrictedToAdmin } from "../middlwears/role.middleware.js"
+import { restrictedToCitizen, restrictedToOfficer, restrictedToAdmin } from "../middlwears/role.middleware.js"
 import { upload } from "../middlwears/multer.middleware.js"
 import {
   registerIssue,
@@ -15,9 +14,9 @@ import {
   resolvedIssue,
   rejectIssue,
   commentOnIssue,
-  reopenIssue,
-  getIssueStats
+  reopenIssue
 } from "../controller/issue.controller.js"
+import { getIssueStats } from "../controller/adminStats.controller.js"
 
 const router = Router()
 
@@ -29,13 +28,15 @@ router.route("/register").post(
   registerIssue
 )
 router.route("/mine").get(restrictedToCitizen, getMyIssues)
+router.route("/stats/overview").get(restrictedToAdmin, getIssueStats)
+router.route("/ward/mine").get(restrictedToOfficer, getWardIssues)
+router.route("/").get(restrictedToOfficer, getAllIssues)
+
 router.route("/:issueId").get(restrictedToCitizen, trackIssue)
 router.route("/:issueId").delete(restrictedToCitizen, deleteIssue)
 router.route("/:issueId/reopen").patch(restrictedToCitizen, reopenIssue)
 router.route("/:issueId/comment").post(commentOnIssue)
 
-router.route("/").get(restrictedToOfficer, getAllIssues)
-router.route("/ward/mine").get(restrictedToOfficer, getWardIssues)
 router.route("/:issueId/status").patch(restrictedToOfficer, updateStatus)
 router.route("/:issueId/resolve").patch(
   restrictedToOfficer,
@@ -45,6 +46,5 @@ router.route("/:issueId/resolve").patch(
 router.route("/:issueId/reject").patch(restrictedToOfficer, rejectIssue)
 
 router.route("/:issueId/assign").patch(restrictedToAdmin, assignOfficer)
-router.route("/stats/overview").get(restrictedToAdmin, getIssueStats)
 
 export default router

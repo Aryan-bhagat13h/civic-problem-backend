@@ -20,12 +20,12 @@ export const restrictedToOfficer = (req, _res, next) => {
   next()
 }
 
-export const restrictedToAdmin = (req,res,next) => {
-  if(!req.user){
-    throw new ApiError(401, "Unauthorised access")
+export const restrictedToAdmin = (req, _res, next) => {
+  if (!req.user) {
+    throw new ApiError(401, "Unauthorized request")
   }
-
-  if(req.user.role !== "admin"){
+  if (req.user.role !== "admin") {
     throw new ApiError(403, "Access restricted to admin only")
   }
+  next()
 }

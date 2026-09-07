@@ -1,11 +1,12 @@
 {
   "name": "civic-problem",
   "version": "1.0.0",
-  "description": "",
+  "description": "Civic problem management backend API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",

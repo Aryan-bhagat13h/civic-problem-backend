@@ -63,7 +63,7 @@ const issueSchema = new Schema(
       type: Boolean,
       default: false
     },
-    rejectedAt:{
+    rejectedAt: {
       type: Date
     },
     rejectedBy: {
@@ -72,7 +72,6 @@ const issueSchema = new Schema(
     },
     rejectionReason: {
       type: String,
-      required: true,
       trim: true
     },
     resolvedAt: {

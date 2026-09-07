@@ -1,5 +1,8 @@
+import 'dotenv/config'
+
 async function runTests() {
-  const baseUrl = 'http://localhost:8000/api/v1'
+  const port = process.env.PORT || 3000
+  const baseUrl = `http://localhost:${port}/api/v1`
   let cookie = ''
   
   const timestamp = Date.now()
@@ -37,7 +40,6 @@ async function runTests() {
   // extract cookies
   const setCookie = loginRes.headers.get('set-cookie')
   if (setCookie) {
-     // rudimentary cookie extraction
      const parts = setCookie.split(',').map(s => s.split(';')[0])
      cookie = parts.join('; ')
   }
