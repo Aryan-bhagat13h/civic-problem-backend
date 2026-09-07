@@ -1,5 +1,6 @@
 import { asyncHandler } from "../utils/async-handler.js"
 import { ApiResponse } from "../utils/apiResponse.js"
+import { Issue } from "../models/issue.models.js"
 
 const getIssueStats = asyncHandler(async (req, res) => {
   const statusCounts = await Issue.aggregate([
@@ -83,3 +84,5 @@ const getIssueStats = asyncHandler(async (req, res) => {
     )
   )
 })
+
+export {getIssueStats}

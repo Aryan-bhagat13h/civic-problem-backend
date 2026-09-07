@@ -15,7 +15,8 @@ import {
   resolvedIssue,
   rejectIssue,
   commentOnIssue,
-  reopenIssue
+  reopenIssue,
+  getIssueStats
 } from "../controller/issue.controller.js"
 
 const router = Router()
@@ -42,6 +43,8 @@ router.route("/:issueId/resolve").patch(
   resolvedIssue
 )
 router.route("/:issueId/reject").patch(restrictedToOfficer, rejectIssue)
+
 router.route("/:issueId/assign").patch(restrictedToAdmin, assignOfficer)
+router.route("/stats/overview").get(restrictedToAdmin, getIssueStats)
 
 export default router
