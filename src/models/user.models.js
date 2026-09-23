@@ -44,7 +44,12 @@ const userSchema = new Schema(
     },
     refreshToken: {
     type: String,
-  }
+  },
+    Badge: {
+      type: String,
+      enum: ["", "First step", "Civic voice", "Neighbourhood contributor", "Trusted Contributor", "Civic Gaurdian", "community champion", "Civic leader", "Citizen legend"],
+      default: ""
+    }
   },
   { timestamps: true }
 );

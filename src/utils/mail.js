@@ -48,6 +48,23 @@ const sendOtpMail = async (to, otp) => {
   })
 }
 
+const sendRegisterIssue = async (to, issue) => {
+  return sendMail({
+    to,
+    subject: `Your issue "${issue.title}" has been registered successfully`,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: auto;">
+        <h2>Issue Registered</h2>
+        <p>Your issue has been registered successfully</p>
+        <p><strong>${issue.title}</strong></p>
+        <p style="color: #666; font-size: 13px;">
+          Issue ID: ${issue._id}
+        </p>
+        <p>Check out our website to track the issue</p>
+      </div>`
+  })
+}
+
 const sendIssueResolved = async (to, issue) => {
   return sendMail({
     to,
@@ -65,4 +82,4 @@ const sendIssueResolved = async (to, issue) => {
   })
 }
 
-export { sendIssueResolved, sendOtpMail, sendMail }
+export { sendIssueResolved, sendOtpMail, sendMail, sendRegisterIssue }

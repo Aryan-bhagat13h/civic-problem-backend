@@ -2,7 +2,7 @@ import { User } from "../models/user.models.js";
 import { Issue } from "../models/issue.models.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { ApiError } from "../utils/apiError.js";
-import { ApiResponse } from "../utils/apiResponse.js"; // adjust path if named differently
+import { ApiResponse } from "../utils/apiResponse.js";
 import mongoose from "mongoose";
 
 const citizenImpact = asyncHandler(async (req, res) => {
@@ -29,9 +29,21 @@ const citizenImpact = asyncHandler(async (req, res) => {
         }
     ]);
 
+    const totalIssue = await Issue.aggregate([
+        {
+            $match: { createdBy: new mongoose.Types.ObjectId(userId)}
+        },
+        {
+            count: { $sum: 1 }
+        },
+        {
+            $sort: { count: -1}
+        }
+    ])
+
     return res
         .status(200)
-        .json(new ApiResponse(200, issueStatusCount, "Citizen impact stats fetched successfully"));
+        .json(new ApiResponse(200, issueStatusCount, totalIssue, "Citizen impact stats fetched successfully"));
 });
 
 export { citizenImpact };
