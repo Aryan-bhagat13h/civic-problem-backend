@@ -16,9 +16,13 @@ app.use(cookieParser())
 
 import userRouter from './routes/user.routes.js'
 import issueRouter from './routes/issue.routes.js'
+import citizenImpactRouter from './routes/citizen-impact.routes.js'
+import adminStatsRouter from './routes/admin-stats.routes.js'
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/issues", issueRouter)
+app.use("/api/v1/citizen-impact", citizenImpactRouter)
+app.use("/api/v1/admin-stats", adminStatsRouter)
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500

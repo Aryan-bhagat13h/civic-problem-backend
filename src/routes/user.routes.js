@@ -10,6 +10,7 @@ import {
   resetPasswordWithToken
 } from "../controller/user.controller.js"
 import { verifyJwt } from "../middlwears/auth.middlerware.js"
+import { citizenImpact } from "../controller/citizen-impact.controller.js"
 
 const router = Router()
 
@@ -21,5 +22,7 @@ router.route("/update-profile").patch(verifyJwt, updateProfile)
 router.route("/forgot-password").post(forgotPassword)
 router.route("/verify-otp").post(verifyOtp)
 router.route("/reset-password").post(resetPasswordWithToken)
+router.route("/impact").get(verifyJwt, citizenImpact)
+router.route("/:userId/impact").get(verifyJwt, citizenImpact)
 
 export default router

@@ -6,20 +6,23 @@ import { ApiResponse } from "../utils/apiResponse.js";
 import mongoose from "mongoose";
 
 const citizenImpact = asyncHandler(async (req, res) => {
-    const { userId } = req.params;
+    const targetUserId = req.params.userId || req.user?._id;
 
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
+    if (!targetUserId || !mongoose.Types.ObjectId.isValid(targetUserId)) {
         throw new ApiError(400, "Invalid user id");
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(targetUserId);
     if (!user) {
         throw new ApiError(404, "User not found");
     }
 
     const issueStatusCount = await Issue.aggregate([
         {
-            $match: { createdBy: new mongoose.Types.ObjectId(userId) } 
+            $match: { 
+                reportedBy: new mongoose.Types.ObjectId(targetUserId),
+                isDeleted: false
+            } 
         },
         {
             $group: { _id: "$status", count: { $sum: 1 } }
@@ -29,21 +32,14 @@ const citizenImpact = asyncHandler(async (req, res) => {
         }
     ]);
 
-    const totalIssue = await Issue.aggregate([
-        {
-            $match: { createdBy: new mongoose.Types.ObjectId(userId)}
-        },
-        {
-            count: { $sum: 1 }
-        },
-        {
-            $sort: { count: -1}
-        }
-    ])
+    const totalIssues = await Issue.countDocuments({
+        reportedBy: new mongoose.Types.ObjectId(targetUserId),
+        isDeleted: false
+    });
 
     return res
         .status(200)
-        .json(new ApiResponse(200, issueStatusCount, totalIssue, "Citizen impact stats fetched successfully"));
+        .json(new ApiResponse(200, { issueStatusCount, totalIssues }, "Citizen impact stats fetched successfully"));
 });
 
 export { citizenImpact };
