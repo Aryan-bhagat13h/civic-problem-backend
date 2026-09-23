@@ -4,7 +4,10 @@ import {
   loginUser, 
   logoutUser, 
   changePassword, 
-  updateProfile 
+  updateProfile,
+  forgotPassword,
+  verifyOtp,
+  resetPasswordWithToken
 } from "../controller/user.controller.js"
 import { verifyJwt } from "../middlwears/auth.middlerware.js"
 
@@ -15,5 +18,8 @@ router.route("/login").post(loginUser)
 router.route("/logout").post(verifyJwt, logoutUser)
 router.route("/change-password").post(verifyJwt, changePassword)
 router.route("/update-profile").patch(verifyJwt, updateProfile)
+router.route("/forgot-password").post(forgotPassword)
+router.route("/verify-otp").post(verifyOtp)
+router.route("/reset-password").post(resetPasswordWithToken)
 
 export default router

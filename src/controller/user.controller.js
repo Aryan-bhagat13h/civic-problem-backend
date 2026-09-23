@@ -2,8 +2,10 @@ import { asyncHandler } from '../utils/async-handler.js'
 import { ApiError } from '../utils/apiError.js'
 import { ApiResponse } from '../utils/apiResponse.js'
 import { User } from '../models/user.models.js'
-import { Ward } from '../models/ward.models.js' 
+import { Ward } from '../models/ward.models.js'
+import { sendOtpMail } from '../utils/mail.js'
 import mongoose from 'mongoose'
+import crypto from 'crypto'
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -183,6 +185,115 @@ const changePassword = asyncHandler(async (req, res) => {
   )
 })
 
+const generateOtp = () => {
+  return crypto.randomInt(100000, 999999).toString()
+}
+
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body
+
+  if (!email || String(email).trim() === "") {
+    throw new ApiError(400, "Email is required")
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+
+  if (!user) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "If that email is registered, an OTP has been sent"))
+  }
+
+  const otp = generateOtp()
+  const hashedOtp = crypto.createHash("sha256").update(otp).digest("hex")
+
+  user.resetPasswordOtp = hashedOtp
+  user.resetPasswordOtpExpiry = Date.now() + 10 * 60 * 1000 // 10 minutes
+  await user.save({ validateBeforeSave: false })
+
+  try {
+    await sendOtpMail(user.email, otp)
+  } catch (err) {
+    user.resetPasswordOtp = undefined
+    user.resetPasswordOtpExpiry = undefined
+    await user.save({ validateBeforeSave: false })
+    throw new ApiError(500, "Failed to send OTP email")
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "If that email is registered, an OTP has been sent"))
+})
+
+const verifyOtp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required")
+  }
+
+  const user = await User.findOne({ email: email.trim().toLowerCase() })
+    .select("+resetPasswordOtp +resetPasswordOtpExpiry")
+
+  if (!user || !user.resetPasswordOtp || !user.resetPasswordOtpExpiry) {
+    throw new ApiError(400, "Invalid or expired OTP")
+  }
+
+  if (user.resetPasswordOtpExpiry < Date.now()) {
+    user.resetPasswordOtp = undefined
+    user.resetPasswordOtpExpiry = undefined
+    await user.save({ validateBeforeSave: false })
+    throw new ApiError(400, "OTP has expired")
+  }
+
+  const hashedOtp = crypto.createHash("sha256").update(String(otp)).digest("hex")
+
+  if (hashedOtp !== user.resetPasswordOtp) {
+    throw new ApiError(400, "Invalid OTP")
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex")
+  const hashedResetToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+
+  user.resetPasswordOtp = undefined
+  user.resetPasswordOtpExpiry = undefined
+  user.resetPasswordToken = hashedResetToken
+  user.resetPasswordTokenExpiry = Date.now() + 10 * 60 * 1000 // 10 minutes to complete reset
+  await user.save({ validateBeforeSave: false })
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { resetToken }, "OTP verified successfully"))
+})
+
+const resetPasswordWithToken = asyncHandler(async (req, res) => {
+  const { resetToken, newPassword } = req.body
+
+  if (!resetToken || !newPassword) {
+    throw new ApiError(400, "Reset token and new password are required")
+  }
+
+  const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+    resetPasswordTokenExpiry: { $gt: Date.now() }
+  }).select("+resetPasswordToken +resetPasswordTokenExpiry +password")
+
+  if (!user) {
+    throw new ApiError(400, "Invalid or expired reset token")
+  }
+
+  user.password = newPassword
+  user.resetPasswordToken = undefined
+  user.resetPasswordTokenExpiry = undefined
+  await user.save()
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password reset successfully"))
+})
+
 const updateProfile = asyncHandler(async (req, res) => {
   const { fullname, email, username } = req.body
 
@@ -231,4 +342,13 @@ const updateProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "profile updated successfully"))
 })
 
-export { registerUser, loginUser, logoutUser, changePassword, updateProfile }
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  changePassword,
+  updateProfile,
+  forgotPassword,
+  verifyOtp,
+  resetPasswordWithToken
+}

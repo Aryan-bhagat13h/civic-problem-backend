@@ -49,7 +49,23 @@ const userSchema = new Schema(
       type: String,
       enum: ["", "First step", "Civic voice", "Neighbourhood contributor", "Trusted Contributor", "Civic Gaurdian", "community champion", "Civic leader", "Citizen legend"],
       default: ""
-    }
+    },
+    resetPasswordOtp: { 
+      type: String, 
+      select: false 
+    },
+    resetPasswordOtpExpiry: { 
+      type: Date, 
+      select: false 
+    },
+    resetPasswordToken: { 
+      type: String, 
+      select: false 
+    },
+    resetPasswordTokenExpiry: { 
+      type: Date, 
+      select: false 
+    },
   },
   { timestamps: true }
 );
