@@ -7,7 +7,7 @@ import { asyncHandler } from "../utils/async-handler.js"
 import { User } from "../models/user.models.js"
 import { Ward } from "../models/ward.models.js"
 import mongoose from "mongoose"
-import { sendIssueResolved } from "../utils/mail.js"
+import { sendIssueResolved, sendRegisterIssue } from "../utils/mail.js"
 
 const registerIssue = asyncHandler(async (req, res) => {
   if (!req.user?._id) {
@@ -76,10 +76,19 @@ const registerIssue = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Error occurred while creating issue")
   }
 
+  if (req.user?.email) {
+  sendRegisterIssue(req.user.email, createdIssue).catch((err) => {
+    console.error("Error occurred while sending email", err)
+  })
+}
+
   return res
     .status(201)
     .json(new ApiResponse(201, createdIssue, "Issue registered successfully"))
-})
+
+  }
+)
+
 
 const trackIssue = asyncHandler(async (req, res) => {
   const { issueId } = req.params
